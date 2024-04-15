@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Message Board</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f4;
+            color: #333;
+            padding: 20px;
+            margin: 0;
+        }
+        h1 {
+            color: #333;
+        }
+        form, button {
+            margin-top: 20px;
+        }
+        input[type="text"] {
+            padding: 10px;
+            margin-right: 10px;
+            width: 300px;
+            border: 2px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            background-color: #555;
+            color: white;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #333;
+        }
+        #currentMessage {
+            margin-top: 20px;
+            font-size: 20px;
+            padding: 10px;
+            background-color: #ddd;
+            border-radius: 4px;
+        }
+        p {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <h1>Message Board</h1>
+    {% if error %}
+        <p style="color: red;">{{ error }}</p>
+    {% endif %}
+    <!-- Display area for the current message -->
+    <div id="currentMessage">Current message: {{ message }}</div>
+
+    <!-- Form for submitting new message -->
+    <form method="post" action="/">
+        <label for="message">Enter your message:</label>
+        <input type="text" id="message" name="message" placeholder="Type your message here...">
+        <button type="submit">Submit Message</button>
+    </form>
+
+    <!-- Button for fetching the current message -->
+    <button onclick="getMessage()">Get Current Message</button>
+
+    <!-- Button for deleting the message -->
+    <button onclick="deleteMessage()">Delete Message</button>
+
+    <!-- JavaScript to handle the DELETE and GET requests -->
+    <script>
+        function deleteMessage() {
+            fetch('/', {
+                method: 'DELETE'
+            }).then(response => {
+                document.getElementById('currentMessage').innerText = 'Current message: ';
+            }).catch(error => console.error('Error:', error));
+        }
+    
+        function getMessage() {
+            fetch('/')
+                .then(response => response.text())
+                .then(html => {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    const message = doc.querySelector('h2#currentMessage').innerText.replace('Current message: ', '');
+                    console.log('Fetched message:', message); // Log the message to the console
+                })
+                .catch(error => console.error('Error:', error));
+        }
+    </script>    
+</body>
+</html>

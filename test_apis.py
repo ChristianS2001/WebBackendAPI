@@ -1,7 +1,7 @@
 import requests
 from pprint import pprint
 
-base_url = "http://127.0.0.1:5000" #replace with your local ip given by flask from the output when you run the main.py file
+base_url = "" #replace with your local ip given by flask from the output when you run the main.py file
 #Run the main.py file before running this test file
 #Also to test open up another terminal in the same directory and run the test_apis.py file
 
@@ -53,8 +53,10 @@ def test_add_appointment_invalid_time(doctor_id, date_time):
 def test_add_too_many_appointments_same_time(doctor_id, date_time):
     print(f"Testing adding too many appointments at the same time {date_time}:")
     #Assume doctor_id 1 is a valid doctor and we have already two appointments at 09:00
+    count = 0
     responses = []
     for i in range(4):  #Attempt to add 4 appointments at the same time
+        count+=1
         response = test_add_appointment(
             doctor_id=doctor_id,
             date_time=date_time,
@@ -63,6 +65,11 @@ def test_add_too_many_appointments_same_time(doctor_id, date_time):
             kind="New Patient"
         )
         responses.append(response)
+        if count != 4:
+            print("This is the" + str(count) + "th appointment scheduled")
+        elif count == 4:
+            print("This is the" + str(count) + "th appointment scheduled")
+            print("Now that we have reached 4 appointments at the same time we should see a fail here" + str(response))
     return responses
 
 #Run tests
@@ -106,7 +113,7 @@ if __name__ == "__main__":
     #Testing too many appointments at the same time
     print("\n--- Testing too many appointments at the same time ---")
     too_many_responses = test_add_too_many_appointments_same_time(
-        doctor_id=1,
+        doctor_id=4,
         date_time="2024-04-16T09:15"
     )
 

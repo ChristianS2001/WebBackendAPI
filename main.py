@@ -13,8 +13,9 @@ def populate_dummy_data():
         doc1 = Doctor(first_name='John', last_name='Johnson')
         doc2 = Doctor(first_name='Connor', last_name='McGreggor')
         doc3 = Doctor(first_name='Josh', last_name='Peck')
+        doc4 = Doctor(first_name='Reviewing', last_name='Engineer')   
 
-        db.session.add_all([doc1, doc2, doc3])
+        db.session.add_all([doc1, doc2, doc3, doc4])
         db.session.commit()
 
         appointments = [

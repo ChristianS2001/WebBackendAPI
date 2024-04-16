@@ -11,21 +11,19 @@ db = SQLAlchemy(app)
 def home():
     return render_template('index.html')
 
+#Creating dummy data for the flask app as a base in the database
 def populate_dummy_data():
-    # Check if there are any doctors already in the database
     if Doctor.query.first() is None:
-        # Create dummy doctors
-        doc1 = Doctor(first_name='Julius', last_name='Hibbert')
-        doc2 = Doctor(first_name='Algernop', last_name='Krieger')
-        doc3 = Doctor(first_name='Nick', last_name='Riviera')
+        doc1 = Doctor(first_name='John', last_name='Johnson')
+        doc2 = Doctor(first_name='Connor', last_name='McGreggor')
+        doc3 = Doctor(first_name='Josh', last_name='Peck')
 
         db.session.add_all([doc1, doc2, doc3])
         db.session.commit()
 
-        # Create dummy appointments for each doctor
         appointments = [
-            Appointment(patient_first_name='Sterling', patient_last_name='Archer', date_time=datetime(2024, 4, 16, 8, 0), kind='New Patient', doctor=doc1),
-            Appointment(patient_first_name='Cyril', patient_last_name='Figgis', date_time=datetime(2024, 4, 16, 8, 30), kind='Follow-up', doctor=doc2),
+            Appointment(patient_first_name='Hunter', patient_last_name='Smith', date_time=datetime(2024, 4, 16, 8, 0), kind='New Patient', doctor=doc1),
+            Appointment(patient_first_name='Christian', patient_last_name='Smith', date_time=datetime(2024, 4, 16, 8, 30), kind='Follow-up', doctor=doc2),
         ]
 
         db.session.add_all(appointments)
@@ -44,7 +42,7 @@ class Appointment(db.Model):
     patient_first_name = db.Column(db.String(50), nullable=False)
     patient_last_name = db.Column(db.String(50), nullable=False)
     date_time = db.Column(db.DateTime, nullable=False)
-    kind = db.Column(db.String(50), nullable=False)  # 'New Patient' or 'Follow-up'
+    kind = db.Column(db.String(50), nullable=False)
     doctor_id = db.Column(db.Integer, db.ForeignKey('doctor.id'), nullable=False)
 
 
@@ -57,9 +55,14 @@ def get_doctors():
     return json
 
 
+def appointment_time_is_valid(date_time):
+    """Check if the appointment time is on a 15-minute interval."""
+    return date_time.minute % 15 == 0 and date_time.second == 0
+
+
 @app.route('/appointments/<int:doctor_id>', methods=['GET'])
 def get_appointments(doctor_id):
-    date = request.args.get('date')  # Expected format 'YYYY-MM-DD'
+    date = request.args.get('date')
     date_obj = datetime.strptime(date, '%Y-%m-%d')
     appointments = Appointment.query.filter_by(doctor_id=doctor_id).filter(db.func.date(Appointment.date_time) == date_obj.date()).all()
     return jsonify([{'id': app.id, 'patient_first_name': app.patient_first_name, 'patient_last_name': app.patient_last_name, 'time': app.date_time.strftime('%Y-%m-%dT%H:%M'), 'kind': app.kind} for app in appointments])
@@ -75,10 +78,23 @@ def delete_appointment(appointment_id):
 @app.route('/appointments', methods=['POST'])
 def add_appointment():
     data = request.json
+    
+    try:
+        date_time = datetime.strptime(data['date_time'], '%Y-%m-%dT%H:%M')
+    except ValueError:
+        return jsonify({'error': 'Invalid date format, should be YYYY-MM-DDTHH:MM'}), 400
+    
+    if not appointment_time_is_valid(date_time):
+        return jsonify({'error': 'Invalid appointment time, should be at a 15-minute interval'}), 400
+
+    existing_appointments = Appointment.query.filter_by(doctor_id=data['doctor_id'], date_time=date_time).count()
+    if existing_appointments >= 3:
+        return jsonify({'error': 'A doctor can have no more than 3 appointments at the same time'}), 400
+
     new_appointment = Appointment(
         patient_first_name=data['patient_first_name'],
         patient_last_name=data['patient_last_name'],
-        date_time=datetime.strptime(data['date_time'], '%Y-%m-%dT%H:%M'),
+        date_time=date_time,
         kind=data['kind'],
         doctor_id=data['doctor_id']
     )

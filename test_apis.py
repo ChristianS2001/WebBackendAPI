@@ -11,10 +11,10 @@ def test_get_doctors():
     print("Get Doctors:")
     pprint(response.json())
 
-#Test Get Appointments for a Doctor
-def test_get_appointments(doctor_id, date):
+#Test Get All Appointments for a Specific Doctor on a Specific Day
+def test_get_appointments_for_doctor_on_day(doctor_id, date):
     response = requests.get(f"{base_url}/appointments/{doctor_id}?date={date}")
-    print(f"Get Appointments for Doctor {doctor_id} on {date}:")
+    print(f"Get All Appointments for Doctor {doctor_id} on {date}:")
     pprint(response.json())
 
 #Test Delete an Appointment
@@ -67,17 +67,23 @@ def test_add_too_many_appointments_same_time(doctor_id, date_time):
 #Run tests
 if __name__ == "__main__":
     test_get_doctors()
-    test_get_appointments(doctor_id=1, date="2024-04-16")
+
+    #Test getting all appointments for a specific doctor on a specific day
+    print("\n--- Testing getting all appointments for a specific doctor on a specific day ---")
+    test_get_appointments_for_doctor_on_day(doctor_id=1, date="2024-04-16")
 
     #Testing valid appointment addition
     print("\n--- Testing valid appointment addition ---")
-    test_add_appointment(
+    added_appointment_response = test_add_appointment(
         doctor_id=1,
         date_time="2024-04-16T09:15",
         patient_first_name="John",
         patient_last_name="Doe",
         kind="New Patient"
     )
+    
+    #Extract the ID of the newly added appointment for deletion test
+    added_appointment_id = added_appointment_response.get('id', None)
     
     #Testing invalid time (not at 15-minute intervals)
     print("\n--- Testing invalid time addition ---")
@@ -92,3 +98,10 @@ if __name__ == "__main__":
         doctor_id=1,
         date_time="2024-04-16T09:15"
     )
+
+    #Deleting the appointment added for test purposes, if it was added successfully
+    if added_appointment_id is not None:
+        print("\n--- Deleting the test appointment ---")
+        test_delete_appointment(appointment_id=added_appointment_id)
+    else:
+        print("Could not test deleting the appointment - no valid appointment ID returned from add operation.")

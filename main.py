@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 
@@ -6,10 +6,6 @@ app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///data.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
-
-@app.route('/')
-def home():
-    return render_template('index.html')
 
 #Creating dummy data for the flask app as a base in the database
 def populate_dummy_data():
@@ -61,11 +57,25 @@ def appointment_time_is_valid(date_time):
 
 
 @app.route('/appointments/<int:doctor_id>', methods=['GET'])
-def get_appointments(doctor_id):
+def get_appointments_for_doctor_on_day(doctor_id):
     date = request.args.get('date')
-    date_obj = datetime.strptime(date, '%Y-%m-%d')
+    try:
+        date_obj = datetime.strptime(date, '%Y-%m-%d')
+    except (ValueError, TypeError):
+        return jsonify({'error': 'Invalid date format, should be YYYY-MM-DD'}), 400
+
     appointments = Appointment.query.filter_by(doctor_id=doctor_id).filter(db.func.date(Appointment.date_time) == date_obj.date()).all()
-    return jsonify([{'id': app.id, 'patient_first_name': app.patient_first_name, 'patient_last_name': app.patient_last_name, 'time': app.date_time.strftime('%Y-%m-%dT%H:%M'), 'kind': app.kind} for app in appointments])
+    return jsonify([
+        {
+            'id': app.id,
+            'doctor_id': app.doctor_id,
+            'patient_first_name': app.patient_first_name,
+            'patient_last_name': app.patient_last_name,
+            'time': app.date_time.strftime('%Y-%m-%dT%H:%M'),
+            'kind': app.kind
+        } for app in appointments
+    ])
+
 
 @app.route('/appointments/<int:appointment_id>', methods=['DELETE'])
 def delete_appointment(appointment_id):

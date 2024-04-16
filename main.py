@@ -26,7 +26,6 @@ def populate_dummy_data():
         appointments = [
             Appointment(patient_first_name='Sterling', patient_last_name='Archer', date_time=datetime(2024, 4, 16, 8, 0), kind='New Patient', doctor=doc1),
             Appointment(patient_first_name='Cyril', patient_last_name='Figgis', date_time=datetime(2024, 4, 16, 8, 30), kind='Follow-up', doctor=doc2),
-            # ... add more dummy appointments ...
         ]
 
         db.session.add_all(appointments)

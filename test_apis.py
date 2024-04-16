@@ -35,6 +35,7 @@ def test_add_appointment(doctor_id, date_time, patient_first_name, patient_last_
     response = requests.post(f"{base_url}/appointments", json=appointment_data)
     print("Add New Appointment:")
     pprint(response.json())
+    return response.json()
 
 #Test Adding an Appointment at Invalid Time
 def test_add_appointment_invalid_time(doctor_id, date_time):
@@ -92,6 +93,16 @@ if __name__ == "__main__":
         date_time="2024-04-16T09:07"
     )
     
+    print("\n--- Adding an appointment to be deleted ---")
+    #Make sure this is a time slot that exists and is free for the doctor to avoid the 'no more than 3 appointments' error
+    valid_appointment_for_deletion = test_add_appointment(
+        doctor_id=1,
+        date_time="2024-04-16T09:45",
+        patient_first_name="Delete",
+        patient_last_name="Me",
+        kind="New Patient"
+    )
+
     #Testing too many appointments at the same time
     print("\n--- Testing too many appointments at the same time ---")
     too_many_responses = test_add_too_many_appointments_same_time(
@@ -99,9 +110,10 @@ if __name__ == "__main__":
         date_time="2024-04-16T09:15"
     )
 
-    #Deleting the appointment added for test purposes, if it was added successfully
-    if added_appointment_id is not None:
+    #Test deletion of the appointment added for deletion
+    if valid_appointment_for_deletion and 'id' in valid_appointment_for_deletion:
         print("\n--- Deleting the test appointment ---")
-        test_delete_appointment(appointment_id=added_appointment_id)
+        appointment_id_to_delete = valid_appointment_for_deletion['id']
+        test_delete_appointment(appointment_id=appointment_id_to_delete)
     else:
-        print("Could not test deleting the appointment - no valid appointment ID returned from add operation.")
+        print("Could not add an appointment for deletion test; no valid appointment ID returned from add operation.")

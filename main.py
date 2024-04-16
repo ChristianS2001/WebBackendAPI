@@ -28,14 +28,14 @@ def populate_dummy_data():
 
 
 class Doctor(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True) #defining the unique id for doctors here
     first_name = db.Column(db.String(50), nullable=False)
     last_name = db.Column(db.String(50), nullable=False)
     appointments = db.relationship('Appointment', backref='doctor', lazy=True)
 
 
 class Appointment(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True) #defining the unique id for appointments here
     patient_first_name = db.Column(db.String(50), nullable=False)
     patient_last_name = db.Column(db.String(50), nullable=False)
     date_time = db.Column(db.DateTime, nullable=False)
